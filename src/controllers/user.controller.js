@@ -6,6 +6,8 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import validateEmail from "../helpers/validateEmail.js";
 import deleteImagesOnError from "../helpers/deleteImagesOnError.js";
 import generateAccessAndRefreshTokens from "../helpers/generateAccessAndRefreshTokens.js";
+import jwt from "jsonwebtoken";
+
 
 const registerUser = asyncHandler(async (req, res) => {
   //get user details from frontend
@@ -185,6 +187,54 @@ const loginUser = asyncHandler(async (req, res) => {
   }
 );
 
+const refreshAccessToken = asyncHandler(async (req, res) => {
+  const incomingRefreshToken = req.cookies.refreshToen || req.body.refreshToken 
+
+  if(!incomingRefreshToken){
+    throw new ApiError(401, "unautjorized request")
+  }
+
+ try {
+   const decoddedToken = jwt.verify(
+     incomingRefreshToken,
+     process.env.REFRESH_TOKEN_SECRET
+   )
+ 
+   const user = await User.findById(decoddedToken?._id)
+ 
+   if(!user){
+     throw new ApiError(401, "Invalid Refresh token")
+   }
+ 
+   if(incomingRefreshToken !== user?.refreshToken){
+     throw new ApiError(401, "Refresh token is expired or used")
+   }
+ 
+   const options = {
+     httpOnly: true,
+     secure: true
+   }
+ 
+   const {accessToken, newRefreshToken} = await generateAccessAndRefreshTokens(user._id)
+ 
+   return res
+   .status(200)
+   .cookie("accessToken", accessToken, options)
+   .cookie("refreshToken", newRefreshToken, options)
+   .json(
+     new ApiResponse(
+       200,
+       {accessToken, refreshToken:newRefreshToken},
+       "Access token refreshed"
+     )
+   )
+ } catch (error) {
+    throw new ApiError(401, error?.message ||
+      "Invalid refresh token"
+    )
+ }
+}
+)
 
 
-export { registerUser, loginUser, logoutUser };
+export { registerUser, loginUser, logoutUser, refreshAccessToken};
