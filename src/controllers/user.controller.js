@@ -267,7 +267,8 @@ const updateAccountDetails = asyncHandler(async(req, res) => {
     throw new ApiError(400, "All fields are required")
   }
 
-  const user = User.findByIdAndUpdate(
+  //update user record in mongoDB
+  const user = await User.findByIdAndUpdate(
   req.user?._id,
   {
       $set: {
@@ -281,11 +282,18 @@ const updateAccountDetails = asyncHandler(async(req, res) => {
 
   return res
   .status(200)
-  .json(new ApiError(200, user, "Account details updated successfully"))
+  .json(new ApiResponse(200, user, "Account details updated successfully"))
 })
 
 const updateUserAvatar = asyncHandler(async(req, res) => {
-    const avatarLocalPath = req.file?.path
+/*The update avatar endpoint:
+Gets the uploaded file
+Uploads to Cloudinary
+Gets Cloudinary URL
+Saves URL in database
+Returns updated user
+Frontend automatically shows new DP*/
+ const avatarLocalPath = req.file?.path
 
     if(!avatarLocalPath){
       throw new ApiError(400, "Avatar file is missing")
@@ -296,8 +304,9 @@ const updateUserAvatar = asyncHandler(async(req, res) => {
       throw new ApiError(400, "Error while uploading an avatar")
     }
 
+    //update avatar URL in Database
   const user =   await User.findByIdAndUpdate(
-      req.user?._id,
+      req.user?._id, //This is ID of logged-in user provided by your JWT middleware.
       {
           $set:{
             avatar: avatar.url
@@ -311,6 +320,7 @@ const updateUserAvatar = asyncHandler(async(req, res) => {
     .json(
       new ApiResponse(200, user," Avatar updated successfuly")
     )
+    //Frontend will now show the new picture.
 })
 
 const updateUserCoverImage = asyncHandler(async(req, res) => {
