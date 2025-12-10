@@ -7,6 +7,7 @@ import validateEmail from "../helpers/validateEmail.js";
 import deleteImagesOnError from "../helpers/deleteImagesOnError.js";
 import generateAccessAndRefreshTokens from "../helpers/generateAccessAndRefreshTokens.js";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 
 
 const registerUser = asyncHandler(async (req, res) => {
@@ -166,8 +167,8 @@ const loginUser = asyncHandler(async (req, res) => {
     await User.findByIdAndUpdate(
       req.user._id,
       {
-        $set: { 
-          refreshToken: undefined
+        $unset: { 
+          refreshToken: 1
         }
       },
       {
@@ -360,11 +361,7 @@ const getUserChannelProfile = asyncHandler(async(req, res) => {
     }
 
     const channel = await User.aggregate([
-      {
-          $match: {
-            username: username?.toLowerCase()
-          }
-      },
+      
       {
           $lookup: {
                 from: "subscription",
@@ -376,7 +373,7 @@ const getUserChannelProfile = asyncHandler(async(req, res) => {
       {
           $lookup: {
                 from: "subscription",
-                localField: "._id",
+                localField: "_id",
                 foreignField:"subscriber",
                 as: "subscribedTo"
           }
