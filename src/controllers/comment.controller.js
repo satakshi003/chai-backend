@@ -67,11 +67,38 @@ const addComment = asyncHandler(async (req, res) => {
 
 const updateComment = asyncHandler(async (req, res) => {
     // TODO: update a comment
-    
-})
+  const {commentId} = req.params;
+  const content = req.body;
+  
+  if(!isValidObjectId(commentId)){
+    throw new ApiError(400, "Invalid comment ID");
+  }
+
+  if (!content || content.trim().length === 0) {
+        throw new ApiError(400, "Comment cannot be empty");
+    }
+
+    const comment = await Comment.findById(commentId);
+    if(!comment){
+      throw new ApiError(404, "Comment not found" )
+    }
+
+    if(comment.owner.toString() !== req.user._id.toString()){
+      throw new ApiError(403, "You are not allowed to update this comment");
+    }
+
+    comment.content = content;
+
+    await comment.save();
+
+    return res 
+    .status(200)
+    .json(new ApiResponse(200, comment, "Comment updated successfully"));
+});
 
 const deleteComment = asyncHandler(async (req, res) => {
     // TODO: delete a comment
+    
 })
 
 export {
