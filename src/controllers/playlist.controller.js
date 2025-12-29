@@ -33,9 +33,21 @@ const getUserPlaylists = asyncHandler(async (req, res) => {
     //TODO: get user playlists
 
     if(!isValidObjectId(userId)){
-      
+      throw new ApiError(400, "Invalid userId")
     }
-})
+
+    const playlists = await Playlist.find({owner: userId}).populate("videos", "title thumbnail owner duration");
+
+    return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        playlists,
+        "User playlists fetched successfully"
+      )
+    );
+});
 
 const getPlaylistById = asyncHandler(async (req, res) => {
     const {playlistId} = req.params
