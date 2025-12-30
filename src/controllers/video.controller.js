@@ -95,14 +95,14 @@ const getAllVideos = asyncHandler(async (req, res) => {
 const uploadAVideo = asyncHandler(async (req, res) => {
     const { title, description} = req.body
     // TODO: get video, upload to cloudinary, create video
-
     if(!title || !description){
       throw new ApiError(400, "Title and description are required" );
     }
 
-    const videoLocalPath = req.files?.video && req.files.video.length > 0 ? req.files.video[0].path:null;
+    const videoLocalPath = req.files?.videoFile?.[0]?.path;
 
-    const thumbnailLocalPath = req.files?.thumbnail && req.files.thumbnail.length > 0 ? req.files.thumbnail[0].path:null;
+    const thumbnailLocalPath = req.files?.thumbnail?.[0]?.path;
+
 
     if(!videoLocalPath || !thumbnailLocalPath){
       throw new ApiError(400, "Video file and thumbnail are required");
@@ -172,8 +172,9 @@ const updateVideo = asyncHandler(async (req, res) => {
 
     let newThumbnailUrl = video.thumbnail;
 
-    if(req.files?.thumbnail?.[0]?.path){
-      const uploadedThumbnail = await uploadOnCloudinary(req.files.thumbnail[0].path);
+    let uploadedThumbnail;
+    if(req.file?.path){
+       uploadedThumbnail = await uploadOnCloudinary(req.file.path);
     };
     if(!uploadedThumbnail){
        throw new ApiError(500, "Thumbnail upload failed");

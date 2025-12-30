@@ -1,3 +1,4 @@
+import fs from "fs";
 
 function deleteImagesOnError(req){
   const avatarLocalPath = req.files?.avatar
