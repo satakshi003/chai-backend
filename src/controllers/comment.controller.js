@@ -10,7 +10,7 @@ const getVideoComments = asyncHandler(async (req, res) => {
     const {videoId} = req.params
     const {page = 1, limit = 10} = req.query
 
-    if(isValidObjectId(videoId)){
+    if(!isValidObjectId(videoId)){
       throw new ApiError(400, "Invalid video ID");
     }
 
@@ -68,15 +68,16 @@ const addComment = asyncHandler(async (req, res) => {
 const updateComment = asyncHandler(async (req, res) => {
     // TODO: update a comment
   const {commentId} = req.params;
-  const content = req.body;
+  const {content} = req.body;
   
   if(!isValidObjectId(commentId)){
     throw new ApiError(400, "Invalid comment ID");
   }
 
-  if (!content || content.trim().length === 0) {
-        throw new ApiError(400, "Comment cannot be empty");
-    }
+  if (!content || typeof content !== "string" || content.trim().length === 0) {
+    throw new ApiError(400, "Comment cannot be empty");
+}
+
 
     const comment = await Comment.findById(commentId);
     if(!comment){
